@@ -26,6 +26,7 @@ import com.journeyapps.barcodescanner.BarcodeEncoder;
 public class LicensePageActivity extends AppCompatActivity {
 
     public static final String mobileNoParameter = "mobileNo";
+
     public static final String fullNameParameter = "fullName";
     public static final String addressParameter = "address";
     public static final String licenseNoParameter = "licenseNo";

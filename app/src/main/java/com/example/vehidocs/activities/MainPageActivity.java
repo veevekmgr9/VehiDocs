@@ -1,11 +1,15 @@
 package com.example.vehidocs.activities;
 
 
+import static android.content.ContentValues.TAG;
+
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.icu.text.SimpleDateFormat;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -13,8 +17,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.vehidocs.R;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -28,10 +33,15 @@ import java.util.Calendar;
 public class MainPageActivity extends AppCompatActivity {
 
     TextView userName, fullName;
+
     FirebaseDatabase rootNode;
     DatabaseReference reference;
+
     public static final String mobileNoParameter = "mobileNo";
+
     public static final String fullNameParameter = "fullName";
+
+    public static final String imagesParameter = "images";
 
     @Override
     public void onStart() {
@@ -44,16 +54,47 @@ public class MainPageActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main_page);
 
         userName = findViewById(R.id.userName);
+        ImageView images = findViewById(R.id.image);
         Intent i = getIntent();
         String fullName = i.getStringExtra(fullNameParameter);
-        userName.setText("Welcome " + fullName);
+        userName.setText("Hello" + "\n" + fullName);
 
-        CardView btnLicense = findViewById(R.id.btnLicense);
-        CardView btnBluebook = findViewById(R.id.btnBluebook);
-        CardView btnVehicleTax = findViewById(R.id.btnVehicleTax);
-        CardView btnLend = findViewById(R.id.btnLend);
-        CardView btnRequestBluebook = findViewById(R.id.btnRequestBluebook);
-        CardView btnSupport = findViewById(R.id.btnSupport);
+        Log.v(TAG, "Fullname" + fullName);
+
+
+        String mobileNumberForImg = getIntent().getStringExtra(mobileNoParameter);
+        //Toast.makeText(getApplicationContext(), mobileNumber, Toast.LENGTH_SHORT).show();
+        rootNode = FirebaseDatabase.getInstance("https://digitalvehicle-5fc1b-default-rtdb.firebaseio.com/");
+        DatabaseReference referenceForImage = rootNode.getReference("Licenses");
+        Query checkUserForImg = referenceForImage.orderByChild("mobileNo").equalTo(mobileNumberForImg);
+        checkUserForImg.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    String imageFromDB = snapshot.child(mobileNumberForImg).child("ProfileImage").getValue(String.class);
+
+                    Log.v(TAG,"Img" + imageFromDB);
+
+                    Glide.with(MainPageActivity.this)
+                        .load(imageFromDB)
+                        .apply(new RequestOptions().override(180, 180))
+                        .centerCrop()
+                        .into(images);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+        ImageView btnLicense = findViewById(R.id.btnLicense);
+        ImageView btnBluebook = findViewById(R.id.btnBluebook);
+        ImageView btnVehicleTax = findViewById(R.id.btnVehicleTax);
+        ImageView btnLend = findViewById(R.id.btnLend);
+        ImageView btnRequestBluebook = findViewById(R.id.btnRequestBluebook);
+        ImageView btnSupport = findViewById(R.id.btnSupport);
+        ImageView imageViewLicense = findViewById(R.id.imageViewLicense);
+        ImageView imageViewBluebook = findViewById(R.id.imageViewBluebook);
 
         btnLicense.setOnClickListener(v -> {
             String mobileNumber = getIntent().getStringExtra(mobileNoParameter);
@@ -320,10 +361,110 @@ public class MainPageActivity extends AppCompatActivity {
 
                 }
             });
-
         });
         btnSupport.setOnClickListener(v -> {
             isTheft();
+        });
+
+        imageViewLicense.setOnClickListener(v -> {
+            String mobileNumber = getIntent().getStringExtra(mobileNoParameter);
+            //Toast.makeText(getApplicationContext(), mobileNumber, Toast.LENGTH_SHORT).show();
+            rootNode = FirebaseDatabase.getInstance("https://digitalvehicle-5fc1b-default-rtdb.firebaseio.com/");
+            DatabaseReference reference = rootNode.getReference("Licenses");
+            Query checkUser = reference.orderByChild("mobileNo").equalTo(mobileNumber);
+            checkUser.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        String fullNameFromDB = snapshot.child(mobileNumber).child("name").getValue(String.class);
+                        String addressFromDB = snapshot.child(mobileNumber).child("address").getValue(String.class);
+                        String mobileNoFromDB = snapshot.child(mobileNumber).child("mobileNo").getValue(String.class);
+                        String licenseNoFromDB = snapshot.child(mobileNumber).child("licenseNo").getValue(String.class);
+                        String bloodGroupFromDB = snapshot.child(mobileNumber).child("bloodGroup").getValue(String.class);
+                        String dobFromDB = snapshot.child(mobileNumber).child("dob").getValue(String.class);
+                        String doeFromDB = snapshot.child(mobileNumber).child("doe").getValue(String.class);
+                        String doiFromDB = snapshot.child(mobileNumber).child("doi").getValue(String.class);
+                        String fatherNameFromDB = snapshot.child(mobileNumber).child("fatherName").getValue(String.class);
+                        String licenseTypeFromDB = snapshot.child(mobileNumber).child("licenseType").getValue(String.class);
+                        String citizenshipNoFromDB = snapshot.child(mobileNumber).child("citizenshipNo").getValue(String.class);
+                        String imageFromDB = snapshot.child(mobileNumber).child("ProfileImage").getValue(String.class);
+
+                        Intent intent = new Intent(getApplicationContext(), LicensePageActivity.class);
+
+                        intent.putExtra(LicensePageActivity.mobileNoParameter, mobileNoFromDB);
+                        intent.putExtra(LicensePageActivity.fullNameParameter, fullNameFromDB);
+                        intent.putExtra(LicensePageActivity.addressParameter, addressFromDB);
+                        intent.putExtra(LicensePageActivity.licenseNoParameter, licenseNoFromDB);
+                        intent.putExtra(LicensePageActivity.bloodGroupParameter, bloodGroupFromDB);
+                        intent.putExtra(LicensePageActivity.dobParameter, dobFromDB);
+                        intent.putExtra(LicensePageActivity.doiParameter, doiFromDB);
+                        intent.putExtra(LicensePageActivity.doeParameter, doeFromDB);
+                        intent.putExtra(LicensePageActivity.fatherNameParameter, fatherNameFromDB);
+                        intent.putExtra(LicensePageActivity.licenseTypeParameter, licenseTypeFromDB);
+                        intent.putExtra(LicensePageActivity.citizenshipNoParameter, citizenshipNoFromDB);
+                        intent.putExtra(LicensePageActivity.imagesParameter, imageFromDB);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "No such User", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Toast.makeText(getApplicationContext(), "No file found", Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+        imageViewBluebook.setOnClickListener(v -> {
+            String mobileNo = getIntent().getStringExtra(mobileNoParameter);
+            String fullName1 = getIntent().getStringExtra(fullNameParameter);
+            rootNode = FirebaseDatabase.getInstance("https://digitalvehicle-5fc1b-default-rtdb.firebaseio.com");
+            DatabaseReference reference = rootNode.getReference("bluebooks");
+            Query checkUser = reference.orderByChild("mobileNumber").equalTo(mobileNo);
+            checkUser.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        String requestStatusFromDB = snapshot.child(mobileNo).child("requestStatus").getValue(String.class);
+                        if (requestStatusFromDB.equals("Pending")) {
+                            AlertDialog.Builder alert = new AlertDialog.Builder(MainPageActivity.this);
+                            alert.setTitle("Bluebook Detail");
+                            alert.setMessage("Your Bluebook Request is pending. Please wait until we finish checking your details.");
+                            alert.setPositiveButton("Done", new DialogInterface.OnClickListener() {
+
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+                            alert.show();
+                        } else {
+                            String vehicleTypeFromDB = snapshot.child(mobileNo).child("vehicleType").getValue(String.class);
+                            String vehicleNoFromDB = snapshot.child(mobileNo).child("vehicleNo").getValue(String.class);
+                            String mobileNoFromDB = snapshot.child(mobileNo).child("mobileNumber").getValue(String.class);
+                            String ownerImageFromDB = snapshot.child(mobileNo).child("imageURL").getValue(String.class);
+                            String vehicleImageFromDB = snapshot.child(mobileNo).child("imageURL1").getValue(String.class);
+                            String fullName12 = getIntent().getStringExtra(fullNameParameter);
+                            Intent intent = new Intent(getApplicationContext(), BluebookPageActivity.class);
+
+                            intent.putExtra(BluebookPageActivity.mobileNoParameter, mobileNoFromDB);
+                            intent.putExtra(BluebookPageActivity.fullNameParameter, fullName12);
+                            intent.putExtra(BluebookPageActivity.vehicleNoParameter, vehicleNoFromDB);
+                            intent.putExtra(BluebookPageActivity.vehicleTypeParameter, vehicleTypeFromDB);
+                            intent.putExtra(BluebookPageActivity.ownerImageParameter, ownerImageFromDB);
+                            intent.putExtra(BluebookPageActivity.vehicleImageParameter, vehicleImageFromDB);
+                            startActivity(intent);
+                        }
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Bluebook not Added!!", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
         });
     }
 
